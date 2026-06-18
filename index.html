@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL_ARCHITECT_PREMIUM++ — Система Проработок</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff0a;
+            --neon-rose: #ff0055;
+            --neon-gold: #ffd700;
+            --bg-dark: #0a0a0f;
+            --bg-panel: rgba(20, 20, 30, 0.9);
+            --border-glow: rgba(0, 243, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Auth Screen */
+        #auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, rgba(0, 243, 255, 0.1) 0%, transparent 70%);
+        }
+
+        .auth-box {
+            background: var(--bg-panel);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-glow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-box h1 {
+            color: var(--neon-blue);
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .auth-box input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .auth-box button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .auth-box button:hover { transform: scale(1.02); }
+
+        /* Main App */
+        #app-screen {
+            display: none;
+        }
+
+        .header {
+            background: var(--bg-panel);
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--neon-blue);
+            font-size: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info span {
+            color: var(--neon-gold);
+        }
+
+        .logout-btn {
+            background: var(--neon-rose);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+        }
+
+        .panel h2 {
+            color: var(--neon-purple);
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--neon-blue);
+            font-size: 13px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glow);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover { transform: scale(1.02); }
+
+        /* Real-time Simulation */
+        .simulation-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .heart-beat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .heart-icon {
+            font-size: 60px;
+            color: var(--neon-rose);
+            animation: heartbeat 1s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .sim-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 243, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--neon-blue);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        /* Charts */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container h3 {
+            color: var(--neon-gold);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glow);
+        }
+
+        .data-table th {
+            color: var(--neon-blue);
+            font-size: 13px;
+        }
+
+        .data-table td {
+            font-size: 13px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .status-success { background: rgba(10, 255, 10, 0.2); color: var(--neon-green); }
+        .status-fail { background: rgba(255, 0, 85, 0.2); color: var(--neon-rose); }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--neon-blue);
+        }
+
+        .pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h1>🔐 Личныи кабинет</h1>
+            <input type="text" id="username" placeholder="Имя пользователя">
+            <input type="password" id="password" placeholder="Пароль">
+            <button onclick="login()">Воити</button>
+            <p style="margin-top: 15px; font-size: 12px; color: #888;">
+                Создать аккаунт: <a href="#" onclick="showRegister()" style="color: var(--neon-blue);">Зарегистрироваться</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-screen">
+        <div class="header">
+            <h1>🧠 NEURAL_ARCHITECT_PREMIUM++</h1>
+            <div class="user-info">
+                <span id="user-display">Пользователь</span>
+                <button class="logout-btn" onclick="logout()">Выити</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Left Panel: Inputs -->
+            <div class="panel">
+                <h2>⚙️ Параметры продукта</h2>
+
+                <div class="form-group">
+                    <label>Тип продукта</label>
+                    <select id="product-type">
+                        <option value="breast">Куриное филе</option>
+                        <option value="thigh">Куриная ножка</option>
+                        <option value="beef">Говядина</option>
+                        <option value="pork">Свинина</option>
+                    </select>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Масса (г)</label>
+                        <input type="number" id="mass" value="1000" min="100" max="10000">
+                    </div>
+                    <div class="form-group">
+                        <label>Толщина (мм)</label>
+                        <input type="number" id="thickness" value="25" min="5" max="100">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Температура (°C)</label>
+                        <input type="number" id="temp" value="4" min="-20" max="40">
+                    </div>
+                    <div class="form-group">
+                        <label>Влажность (%)</label>
+                        <input type="number" id="humidity" value="75" min="0" max="100">
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 30px; color: var(--neon-purple);">🧪 Вакуум-маринование</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Давление (Bar)</label>
+                        <input type="number" id="vacuum" value="-0.85" step="0.01" min="-1" max="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Время (мин)</label>
+                        <input type="number" id="vacuum-time" value="60" min="5" max="480">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Рецептура маринада (г/кг)</label>
+                    <div id="marinade-list" style="max-height: 100px; overflow-y: auto; font-size: 11px; margin-bottom: 5px;"></div>
+                    <div style="display: flex; gap: 4px;">
+                        <input type="text" id="marinade-name" placeholder="Компонент" style="flex: 2; padding: 3px;">
+                        <input type="number" id="marinade-val" placeholder="Граммы" style="flex: 1; padding: 3px;">
+                        <button onclick="addMarinade()" style="padding: 3px 8px; background: var(--neon-blue); border: none; border-radius: 4px; color: #000; cursor: pointer;">+</button>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 30px; color: var(--neon-purple);">💉 Инъекция</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Жидкость (г)</label>
+                        <input type="number" id="injection-mass" value="200" min="0" max="2000">
+                    </div>
+                    <div class="form-group">
+                        <label>Коэффициент (%)</label>
+                        <input type="number" id="injection-coeff" value="20" min="0" max="100">
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 30px; color: var(--neon-purple);">🔥 Жарка</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Температура (°C)</label>
+                        <input type="number" id="fry-temp" value="160" min="50" max="300">
+                    </div>
+                    <div class="form-group">
+                        <label>Время (мин)</label>
+                        <input type="number" id="fry-time" value="28" min="1" max="120">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Влажность камеры (%)</label>
+                    <input type="number" id="fry-steam" value="30" min="0" max="100">
+                </div>
+
+                <button class="btn-primary" onclick="calculate()">🚀 Рассчитать и симулировать</button>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div>
+                <!-- Real-time Simulation -->
+                <div class="simulation-display">
+                    <h2 style="color: var(--neon-rose);">💓 ЖИВОИ СИНХРОН</h2>
+                    <div class="heart-beat">
+                        <div class="heart-icon pulse">❤️</div>
+                        <div>
+                            <div style="font-size: 14px; color: #aaa;">Симуляция в реальном времени</div>
+                            <div id="sim-status" style="color: var(--neon-blue); font-size: 18px; font-weight: bold;">Ожидание...</div>
+                        </div>
+                    </div>
+
+                    <div class="sim-stats">
+                        <div class="stat-card">
+                            <div class="value" id="sim-temp">--°C</div>
+                            <div class="label">Температура</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="sim-moisture">--%</div>
+                            <div class="label">Влажность</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="sim-loss">--%</div>
+                            <div class="label">Ужарка</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Predicted Metrics -->
+                <div class="chart-container">
+                    <h3>📊 Прогнозируемые метрики</h3>
+                    <div class="sim-stats">
+                        <div class="stat-card">
+                            <div class="value" id="pred-loss">--%</div>
+                            <div class="label">Ужарка (прогноз)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="pred-time">-- мин</div>
+                            <div class="label">Время (прогноз)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="pred-taste">--/10</div>
+                            <div class="label">Вкус</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="pred-crust">--/10</div>
+                            <div class="label">Корочка</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="pred-juice">--/10</div>
+                            <div class="label">Сочность</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="pred-pump">--%</div>
+                            <div class="label">Инъекция</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="chart-container">
+                    <h3>📈 Динамика процесса</h3>
+                    <canvas id="tempChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>📉 Потери и выход</h3>
+                    <canvas id="lossChart"></canvas>
+                </div>
+
+                <!-- Data Table -->
+                <div class="panel">
+                    <h2>📋 История проработок</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Дата</th>
+                                <th>Продукт</th>
+                                <th>Ужарка</th>
+                                <th>Вкус</th>
+                                <th>Корочка</th>
+                                <th>Сочность</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body">
+                            <tr>
+                                <td colspan="8" class="loading pulse">Загрузка данных...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let tempChart = null;
+        let lossChart = null;
+        let marinadeList = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+
+        // Auth Functions
+        async function checkAuth() {
+            const { { session } } = await supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showApp();
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                alert('Введите имя пользователя и пароль');
+                return;
+            }
+
+            // Check if user exists
+            const { users, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (error) {
+                // Create new user
+                const { newUser, error: createError } = await supabase
+                    .from('users')
+                    .insert([{
+                        username,
+                        password: password, // In production, hash this!
+                        created_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (createError) {
+                    alert('Ошибка создания аккаунта: ' + createError.message);
+                    return;
+                }
+
+                currentUser = newUser;
+                showApp();
+            } else {
+                // Verify password
+                if (users.password !== password) {
+                    alert('Неверныи пароль');
+                    return;
+                }
+                currentUser = users;
+                showApp();
+            }
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('user-display').textContent = currentUser.username;
+            loadData();
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('app-screen').style.display = 'none';
+        }
+
+        // Data Functions
+        async function loadData() {
+            const { data, error } = await supabase
+                .from('proorabotki')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading data:', error);
+                return;
+            }
+
+            renderTable(data);
+        }
+
+        async function saveData(data) {
+            const { error } = await supabase
+                .from('proorabotki')
+                .insert([{
+                    user_id: currentUser.id,
+                    ...data
+                }]);
+
+            if (error) {
+                console.error('Error saving data:', error);
+                return;
+            }
+
+            loadData();
+        }
+
+        // Render Table
+        function renderTable(data) {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                const statusClass = item.status === 'success' ? 'status-success' : 'status-fail';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${item.id}</td>
+                        <td>${new Date(item.created_at).toLocaleDateString('ru-RU')}</td>
+                        <td>${item.product_type}</td>
+                        <td>${item.metrics.loss}%</td>
+                        <td>${item.sensory.taste}/10</td>
+                        <td>${item.sensory.crust}/10</td>
+                        <td>${item.sensory.juice}/10</td>
+                        <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Physics & Chemistry Engine
+        function calculatePhysics(productType, params) {
+            // Molecular-level calculations
+            const molecularWeight = {
+                breast: 18.015,  // Water
+                thigh: 18.015,
+                beef: 18.015,
+                pork: 18.015
+            };
+
+            const proteinContent = {
+                breast: 0.23,
+                thigh: 0.18,
+                beef: 0.20,
+                pork: 0.17
+            };
+
+            const fatContent = {
+                breast: 0.01,
+                thigh: 0.10,
+                beef: 0.15,
+                pork: 0.12
+            };
+
+            const waterContent = 1 - proteinContent[productType] - fatContent[productType];
+
+            // Vacuum effect on molecular diffusion
+            const vacuumPressure = Math.abs(params.vacuum);
+            const diffusionCoefficient = 1 + (vacuumPressure * 2.5);
+
+            // Marinade penetration depth
+            const marinadePenetration = params.vacuumTime * diffusionCoefficient * 0.5;
+
+            // Injection effect on moisture
+            const injectionEffect = (params.injectionMass / params.mass) * params.injectionCoeff;
+
+            // Thermal properties
+            const specificHeat = 3.5; // kJ/kg·K
+            const thermalConductivity = 0.5; // W/m·K
+
+            // Calculate moisture loss during frying
+            const fryTemp = params.fryTemp;
+            const fryTime = params.fryTime;
+            const frySteam = params.frySteam;
+
+            // Moisture evaporation rate (simplified physics)
+            const evaporationRate = 0.001 * (fryTemp - 100) * (100 - frySteam) / 100;
+            const moistureLoss = evaporationRate * fryTime * 60;
+
+            // Calculate weight loss (ужарка)
+            const initialMass = params.mass;
+            const finalMass = initialMass * (1 - moistureLoss);
+            const weightLoss = ((initialMass - finalMass) / initialMass) * 100;
+
+            // Predictive analysis
+            const predictedLoss = Math.min(50, Math.max(5, weightLoss + (fryTemp - 100) * 0.1));
+            const predictedTime = fryTime * (1 + (params.thickness / 50) * 0.3);
+            const predictedTaste = Math.min(10, Math.max(0, 8 - Math.abs(fryTemp - 160) * 0.02 + (params.vacuumTime / 60) * 0.1));
+            const predictedCrust = Math.min(10, Math.max(0, 6 + (fryTemp - 140) * 0.03 + (frySteam / 100) * 0.5));
+            const predictedJuice = Math.min(10, Math.max(0, 7 - moistureLoss * 2 + injectionEffect * 0.5));
+            const predictedPump = injectionEffect;
+
+            return {
+                molecular: {
+                    diffusionCoefficient,
+                    marinadePenetration,
+                    injectionEffect,
+                    waterContent,
+                    proteinContent: proteinContent[productType],
+                    fatContent: fatContent[productType]
+                },
+                thermal: {
+                    specificHeat,
+                    thermalConductivity,
+                    fryTemp,
+                    fryTime,
+                    frySteam
+                },
+                metrics: {
+                    loss: weightLoss,
+                    pump: predictedPump
+                },
+                sensory: {
+                    taste: predictedTaste,
+                    crust: predictedCrust,
+                    juice: predictedJuice
+                },
+                predicted: {
+                    loss: predictedLoss,
+                    time: predictedTime,
+                    taste: predictedTaste,
+                    crust: predictedCrust,
+                    juice: predictedJuice,
+                    pump: predictedPump
+                }
+            };
+        }
+
+        // Real-time Simulation
+        function simulateRealTime(physicsData, params) {
+            const simStatus = document.getElementById('sim-status');
+            const simTemp = document.getElementById('sim-temp');
+            const simMoisture = document.getElementById('sim-moisture');
+            const simLoss = document.getElementById('sim-loss');
+
+            let currentTemp = params.temp;
+            let currentMoisture = params.humidity;
+            let currentLoss = 0;
+
+            const steps = 60; // 1 minute simulation
+            const interval = 1000; // 1 second per step
+
+            let step = 0;
+
+            const simulationInterval = setInterval(() => {
+                step++;
+
+                // Temperature ramp-up
+                if (currentTemp < params.fryTemp) {
+                    currentTemp += (params.fryTemp - params.temp) / steps;
+                }
+
+                // Moisture loss during frying
+                if (currentTemp > 80) {
+                    const evaporationRate = 0.001 * (currentTemp - 100) * (100 - params.frySteam) / 100;
+                    currentMoisture -= evaporationRate * 60;
+                }
+
+                // Weight loss accumulation
+                if (currentTemp > 60) {
+                    currentLoss += (physicsData.metrics.loss / steps);
+                }
+
+                // Update display
+                simStatus.textContent = `Шаг ${step}/${steps}`;
+                simTemp.textContent = `${currentTemp.toFixed(1)}°C`;
+                simMoisture.textContent = `${currentMoisture.toFixed(1)}%`;
+                simLoss.textContent = `${currentLoss.toFixed(1)}%`;
+
+                if (step >= steps) {
+                    clearInterval(simulationInterval);
+                    simStatus.textContent = '✅ Симуляция завершена';
+                    simTemp.textContent = `${params.fryTemp}°C`;
+                    simMoisture.textContent = `${currentMoisture.toFixed(1)}%`;
+                    simLoss.textContent = `${physicsData.metrics.loss.toFixed(1)}%`;
+                }
+            }, interval);
+        }
+
+        // Charts
+        function initCharts() {
+            const tempCtx = document.getElementById('tempChart').getContext('2d');
+            const lossCtx = document.getElementById('lossChart').getContext('2d');
+
+            tempChart = new Chart(tempCtx, {
+                type: 'line',
+                {
+                    labels: [],
+                    datasets: [{
+                        label: 'Температура (°C)',
+                        [],
+                        borderColor: '#00f3ff',
+                        backgroundColor: 'rgba(0, 243, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#aaa' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#aaa' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            lossChart = new Chart(lossCtx, {
+                type: 'bar',
+                {
+                    labels: ['Влажность', 'Ужарка', 'Инъекция'],
+                    datasets: [{
+                        label: 'Показатели (%)',
+                        [],
+                        backgroundColor: [
+                            'rgba(0, 243, 255, 0.7)',
+                            'rgba(255, 0, 85, 0.7)',
+                            'rgba(255, 215, 0, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#aaa' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#aaa' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(physicsData) {
+            // Temperature chart
+            const tempData = [];
+            const labels = [];
+            for (let i = 0; i <= 60; i++) {
+                labels.push(`${i} мин`);
+                tempData.push(params.temp + (params.fryTemp - params.temp) * (i / 60));
+            }
+
+            tempChart.data.labels = labels;
+            tempChart.data.datasets[0].data = tempData;
+            tempChart.update();
+
+            // Loss chart
+            lossChart.data.datasets[0].data = [
+                params.humidity - physicsData.metrics.loss,
+                physicsData.metrics.loss,
+                physicsData.predicted.pump
+            ];
+            lossChart.update();
+        }
+
+        // Main Calculation Function
+        async function calculate() {
+            const params = {
+                productType: document.getElementById('product-type').value,
+                mass: parseFloat(document.getElementById('mass').value),
+                thickness: parseFloat(document.getElementById('thickness').value),
+                temp: parseFloat(document.getElementById('temp').value),
+                humidity: parseFloat(document.getElementById('humidity').value),
+                vacuum: parseFloat(document.getElementById('vacuum').value),
+                vacuumTime: parseFloat(document.getElementById('vacuum-time').value),
+                injectionMass: parseFloat(document.getElementById('injection-mass').value),
+                injectionCoeff: parseFloat(document.getElementById('injection-coeff').value),
+                fryTemp: parseFloat(document.getElementById('fry-temp').value),
+                fryTime: parseFloat(document.getElementById('fry-time').value),
+                frySteam: parseFloat(document.getElementById('fry-steam').value)
+            };
+
+            // Calculate physics
+            const physicsData = calculatePhysics(params.productType, params);
+
+            // Update predicted metrics display
+            document.getElementById('pred-loss').textContent = `${physicsData.predicted.loss.toFixed(1)}%`;
+            document.getElementById('pred-time').textContent = `${physicsData.predicted.time.toFixed(1)} мин`;
+            document.getElementById('pred-taste').textContent = `${physicsData.predicted.taste.toFixed(1)}/10`;
+            document.getElementById('pred-crust').textContent = `${physicsData.predicted.crust.toFixed(1)}/10`;
+            document.getElementById('pred-juice').textContent = `${physicsData.predicted.juice.toFixed(1)}/10`;
+            document.getElementById('pred-pump').textContent = `${physicsData.predicted.pump.toFixed(1)}%`;
+
+            // Update charts
+            updateCharts(physicsData);
+
+            // Start real-time simulation
+            simulateRealTime(physicsData, params);
+
+            // Save to database
+            const result = {
+                product_type: params.productType,
+                geometry: {
+                    mass: params.mass,
+                    thickness: params.thickness
+                },
+                thermal: {
+                    temp: params.temp,
+                    fryTemp: params.fryTemp,
+                    fryTime: params.fryTime,
+                    frySteam: params.frySteam
+                },
+                vacuum: {
+                    pressure: params.vacuum,
+                    time: params.vacuumTime
+                },
+                injection: {
+                    mass: params.injectionMass,
+                    coeff: params.injectionCoeff
+                },
+                metrics: physicsData.metrics,
+                sensory: physicsData.sensory,
+                predicted: physicsData.predicted,
+                status: physicsData.predicted.loss < 30 ? 'success' : 'fail'
+            };
+
+            await saveData(result);
+        }
+
+        // Marinade Functions
+        function addMarinade() {
+            const name = document.getElementById('marinade-name').value;
+            const val = parseFloat(document.getElementById('marinade-val').value);
+
+            if (name && !isNaN(val)) {
+                marinadeList.push({ name, val });
+                document.getElementById('marinade-name').value = '';
+                document.getElementById('marinade-val').value = '';
+                refreshMarinadeUI();
+            }
+        }
+
+        function refreshMarinadeUI() {
+            const container = document.getElementById('marinade-list');
+            container.innerHTML = marinadeList.map((item, i) => `
+                <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <span>${item.name}</span>
+                    <span>${item.val} г</span>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
